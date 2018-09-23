@@ -1,0 +1,146 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Price</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+      <div class="btn-group mr-2">
+        <button class="btn btn-sm btn-outline-secondary">Share</button>
+        <button class="btn btn-sm btn-outline-secondary">Export</button>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        This week
+      </button>
+    </div>
+  </div>
+
+<div class="form-group row">
+  <label for="price-date-input" class="col-1 col-form-label">Date</label>
+  <div class="col-4">
+    <input class="form-control" type="date" value="2018-04-28" id="price-date-input" onchange="onDateChanged()">
+  </div>
+</div>
+
+<canvas class="my-4 w-100 chartjs-render-monitor" id="myChart" width="593" height="250" style="display: block; width: 593px; height: 250px;"></canvas>
+
+<script>
+    var lastDateInput = null;
+
+    function onDateChanged() {
+      var dateInput = document.getElementById("price-date-input");
+      var value  = dateInput.value;
+
+      var today = new Date();
+      var current = new Date(value);
+
+      if (current > today) {
+        return;
+      }
+
+      if (lastDateInput == current) {
+        return;
+      }
+
+      lastDateInput = current;
+
+      drawDataByDate(current);
+    }
+
+    function drawDataByDate(date = new Date()) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          drawData(JSON.parse(this.response).result);
+        }
+      }
+
+      var url = "./GetPriceData/".concat(encodeURI(date.toISOString()));   // localhost:8000/GetPriceData/2017.06.08T13:06:05
+
+      xhttp.open("GET", url, true);
+      xhttp.send();
+    }
+
+    function drawData(priceData) {
+      console.log(priceData);
+
+      var types = [];
+      var typedData = []
+      var dateLabels = []
+
+      priceData.forEach(row => {
+        var typeIndex = types.indexOf(row[1]); //0 1 2 3
+
+        if (typeIndex == -1) {
+          types.push(row[1]);
+          typedData.push([]);
+
+          typeIndex = types.length - 1;
+        }
+
+        var dateInRow = row[2];
+
+        var timePart = dateInRow.split(" ")[1];
+
+        if (dateLabels.indexOf(timePart) == -1) {
+          dateLabels.push(timePart);
+        }
+
+        typedData[typeIndex].push(row[3]);
+      });
+
+      var datasets = [];
+
+      //Assume the num of the data type will not over 7
+      var colors = [
+        "rgb(255, 99, 132)",  //Red
+        "rgb(255, 159, 64)",  //Orange
+        "rgb(255, 205, 86)",  //Yellow
+        "rgb(0, 0, 0)",  //Black
+        "rgb(75, 192, 192)",  //Green
+        "rgb(54, 162, 235)",  //Blue
+        "rgb(153, 102, 255)", //Purple
+        "rgb(201, 203, 207)"  //Grey
+        ] 
+
+      for (var i = 0; i < types.length; i++)
+      {
+        var data = typedData[i]; 
+
+        var dataset = {
+          label: types[i],
+          fill: false,
+          backgroundColor: colors[i],
+          borderColor: colors[i],
+          data: data
+        };
+
+        datasets.push(dataset);
+      }
+
+      var config = {
+        type: "line",
+        data: {
+          labels: dateLabels,
+          datasets: datasets,
+        },
+        options: {
+          responsive: true,
+          title: {
+            display: true,
+            text: "Price details"
+          }
+        }
+      };
+
+      if (window.priceChart != null) {
+        window.priceChart.destroy();
+      }
+
+      var ctx = document.getElementById("myChart");
+      window.priceChart = new Chart(ctx, config);
+    }
+
+    onDateChanged();
+
+    window.setInterval(onDateChanged, 2000);
+</script>
+

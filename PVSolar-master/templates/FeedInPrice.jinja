@@ -1,0 +1,46 @@
+
+<h3>Feed in price</h3>
+<canvas class="my-4 w-100 chartjs-render-monitor" id="myChart" width="593" height="250" style="display: block; width: 593px; height: 250px;"></canvas>
+
+<script>
+
+    var feedinData =  {{ feedin_price_data|tojson }}
+
+    var dateLabels = []
+    var energyData = []
+
+    feedinData.forEach(data => {
+      dateLabels.push(data[0]);
+      energyData.push(data[1]);
+    });
+
+    var ctx = document.getElementById("myChart");
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dateLabels,
+          datasets: [{
+            data: energyData,
+            steppedLine: true,
+            lineTension: 0,
+            backgroundColor: 'transparent',
+            borderColor: '#007bff',
+            borderWidth: 4,
+            pointBackgroundColor: '#007bff'
+          }]
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: false
+              }
+            }]
+          },
+          legend: {
+            display: false,
+          }
+        }
+      });
+    
+</script>
