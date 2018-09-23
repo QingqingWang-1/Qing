@@ -87,7 +87,7 @@ def get_cost_data(userid, datestr):
     db = Database()
     date = dateutil.parser.parse(datestr)
     data = db.cost_detail(userid, date, date + datetime.timedelta(days = 1))
-
+    print('ddd')
     
     return jsonify(result = data)
 
